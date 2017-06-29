@@ -1,55 +1,56 @@
 
 
-# library(data.table)
-#
-# dt_extend <- data.table(id = 1:5,
-# 												val = letters[1:5])
-#
-# save("dt_extend", file = "./data/dt_extend.rda")
+library(data.table)
+## create data.table
+dt_extend <- data.table(id = 1:5,
+								val = letters[1:5])
+
+## create two attributes:
+## - extend.data.table  onto data.table
+## - extended           onto the 'val' column
+setattr(dt_extend, 'class', c('extended.data.table', class(dt_extend)))
+setattr(dt_extend[['val']], 'extended', 'print')
+
+## Method to format the 'extended' column
+print.extended.data.table <- function(edt){
+
+	print("data.table:::.global$print")
+	print(data.table:::.global$print)
+	print("data.table::shouldPrint(x)")
+	print(data.table::shouldPrint(edt))
+
+	## find the 'extended' column
+	cols <- sapply(edt, function(x) names(attributes(x)))
+	cols <- names(which(cols == "extended"))
+
+	## more than one column can have the 'extended' attribute
+	edt <- edt[,
+						 lapply(.SD, function(y) { paste0("formatted: ", y) } ),
+						 by = setdiff(names(edt), cols),
+						 .SDcols = cols
+						 ]
+
+	data.table:::.global$print
+
+	## now call data.table print
+	NextMethod()
+}
+
+# `[.extended.data.table` <- function(edt){
+# 	# print("[data.table::shouldPrint()")
+# 	# print(data.table::shouldPrint(edt))
+# 	NextMethod()
+# }
+
+## these all print as expected
+dt_extend
+str(dt_extend)
+
+## why does this update AND print?
+dt_extend[, val2 := val]
 
 
 
-
-# I've created a small test package [`extend.data.table`](https://github.com/SymbolixAU/extend.data.table) that I'm using to test how to correctly extend `data.table` objects in my own packages.
-#
-# As part of the package I've included a `dt_extend` .rda, created using
-#
-# '
-# library(data.table)
-#
-# dt_extend <- data.table(id = 1:5,
-# 												val = letters[1:5])
-#
-# save("dt_extend", file = "./data/dt_extend.rda")
-#
-#
-# I can load the package and the data comes with it as expected:
-#
-# 	library(extend.data.table)
-#
-# dt_extend
-# # id val
-# # 1:  1   a
-# # 2:  2   b
-# # 3:  3   c
-# # 4:  4   d
-# # 5:  5   e
-#
-# # str(dt_extend)
-# # Classes ‘data.table’ and 'data.frame':	5 obs. of  2 variables:
-# # 	$ id : int  1 2 3 4 5
-# # $ val: chr  "a" "b" "c" "d" ...
-# # - attr(*, ".internal.selfref")=<externalptr>
-#
-#
-# As `dt_extend` is a `data.table` object it is created with a `.internal.selfref` pointer.
-#
-#
-#
-#
-# ## install from github
-# devtools::install_github("SymbolixAU/extend.data.table")
-#
 
 
 
